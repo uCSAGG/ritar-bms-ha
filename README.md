@@ -10,6 +10,7 @@ Instalation : </br>
 4 - Take examples below, ajust for self </br>
 
 UPDATE 1.1 - added cells temperature sensors 1-4 for batteries 1-2, example templates updated</br>
+UPDATE 1.2 - added MOS and Environment temperature sensors, major bugfixes, stability improvements, reading timeout set over config, example templates updated with new sensors.
 
 Homeassitant configuration examples : https://github.com/mamontuka/ritar-bms/tree/main/standalone_web_service/ritar-bms/web_ui/examples </br>
-With this addon, in configuration.yaml example, 192.168.5.3 (remote standalone service example IP) must be changed on "localhost" (without quotes), because this addon works localy in homeassistant in native mode
+
