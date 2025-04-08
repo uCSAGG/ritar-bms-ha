@@ -256,19 +256,25 @@ while True:
             if block_voltage is not None:
                 # Process block voltage and cells voltage for each battery
                 block_voltage_hex = binascii.hexlify(block_voltage)
+                current_hex = block_voltage_hex[6:-64]
                 voltage_hex = block_voltage_hex[10:-60]
                 charged_hex = block_voltage_hex[14:-56]
                 cycle_hex = block_voltage_hex[34:-36]
-
+                
                 voltage_dec = int(voltage_hex, 16)
                 charged_dec = int(charged_hex, 16)
                 cycle_dec = int(cycle_hex, 16)
+                current_dec = int(current_hex, 16)
+                if current_dec >= 0x8000:  # Check if the value is greater than or equal to 32768 (two's complement for negative numbers)
+                    current_dec -= 0x10000  # Convert to signed decimal using two's complement
 
-                # Format SOC and Charged percentage
+
+                # Format SOC, Current and Charged percentage
                 formatted_voltage = round(voltage_dec / 100, 2)  # Dividing by 100 to get in correct format (e.g., 5399 -> 53.99)
+                formatted_current = round(current_dec / 100, 2)  # Dividing by 100 to get in correct format
                 formatted_charged = round(charged_dec / 10, 1)    # Dividing by 10 to get the percentage (e.g., 1000 -> 100.0)
 
-                print(f"Battery {battery_num} SOC: {formatted_voltage} V, Charged: {formatted_charged}%, Cycles: {cycle_dec}")
+                print(f"Battery {battery_num} SOC: {formatted_voltage} V, Charged: {formatted_charged} %, Cycles: {cycle_dec}, Current: {formatted_current} A")
 
             if cells_voltage is not None:
                 cells_voltage_hex = binascii.hexlify(cells_voltage)
@@ -288,7 +294,7 @@ while True:
      #           if temperatures:
      #               print(f"Battery {battery_num} Temperatures: {', '.join(map(str, temperatures))}°C")
 
-            return voltage_dec, charged_dec, cycle_dec, cells, temperatures
+            return voltage_dec, charged_dec, cycle_dec, cells, temperatures, formatted_current
 
         def process_extra_temperature_data(battery_num, temperature_data):
             if temperature_data is not None:
@@ -310,7 +316,7 @@ while True:
             bat_1_mos_temp, bat_1_env_temp = process_extra_temperature_data(1, bat_1_extra_temperature)
 
         # Process Battery 1 Temperatures
-        bat_1_voltage, bat_1_charged, bat_1_cycle, bat_1_cells, bat_1_temps = process_battery_data(1, bat_1_block_voltage, bat_1_cells_voltage, bat_1_temperature)
+        bat_1_voltage, bat_1_charged, bat_1_cycle, bat_1_cells, bat_1_temps, bat_1_current = process_battery_data(1, bat_1_block_voltage, bat_1_cells_voltage, bat_1_temperature)
 
         # Now print Battery 1 Temperatures followed by MOS and Env temperatures
         if bat_1_temps:
@@ -325,7 +331,7 @@ while True:
 
         # Process Battery 2 Temperatures
         if num_batteries > 1:
-            bat_2_voltage, bat_2_charged, bat_2_cycle, bat_2_cells, bat_2_temps = process_battery_data(2, bat_2_block_voltage, bat_2_cells_voltage, bat_2_temperature)
+            bat_2_voltage, bat_2_charged, bat_2_cycle, bat_2_cells, bat_2_temps, bat_2_current = process_battery_data(2, bat_2_block_voltage, bat_2_cells_voltage, bat_2_temperature)
 
             # Now print Battery 2 Temperatures followed by MOS and Env temperatures
             if bat_2_temps:
@@ -337,13 +343,16 @@ while True:
         ###################################
         ######## API output ###############
         ###################################
-
+        
+        #print(f"TEST Current: {bat_1_current} A , {bat_2_current} A")
+        
         # Handle Battery 1 output
         if volt_min_limit <= bat_1_voltage <= volt_max_limit and cell_min_limit <= bat_1_cells[0] <= cell_max_limit:
             ritar_bms1 = {
                 'b1volt': bat_1_voltage,
                 'b1soc': bat_1_charged,
                 'b1cycl': bat_1_cycle,
+                'b1cur': bat_1_current,
                 **{f'b1c{i+1}': bat_1_cells[i] for i in range(16)},
                 **{f'b1temp{i+1}': bat_1_temps[i] for i in range(4)},  # Only 4 sensors per battery
             }
@@ -367,6 +376,7 @@ while True:
                 'b2volt': bat_2_voltage,
                 'b2soc': bat_2_charged,
                 'b2cycl': bat_2_cycle,
+                'b2cur': bat_2_current,
                 **{f'b2c{i+1}': bat_2_cells[i] for i in range(16)},
                 **{f'b2temp{i+1}': bat_2_temps[i] for i in range(4)},  # Only 4 sensors per battery
             }
