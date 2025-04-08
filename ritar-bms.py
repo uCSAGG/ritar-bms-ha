@@ -9,26 +9,60 @@ import yaml
 import json
 import xml.etree.ElementTree as ET
 
-config = {}
+# Function to load configuration from JSON or YAML
+def load_config():
+    config = {}
 
-# Load configuration from JSON or YAML file
-if os.path.exists('/data/options.json'):
-    print("Loading options.json")
-    with open(r'/data/options.json') as file:
-        config = json.load(file)
-        print("Config: " + json.dumps(config))
+    # Check for options.json
+    if os.path.exists('/data/options.json'):
+        print("Loading options.json")
+        with open('/data/options.json', 'r') as file:
+            config = json.load(file)
+            print("Config loaded from options.json: " + json.dumps(config))
 
-elif os.path.exists('config.yaml'):
-    print("Loading config.yaml")
-    with open(r'config.yaml') as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)['options']
+    # Check for config.yaml
+    elif os.path.exists('config.yaml'):
+        print("Loading config.yaml")
+        with open('config.yaml', 'r') as file:
+            yaml_config = yaml.load(file, Loader=yaml.FullLoader)
+            # Assuming 'options' is a section in the YAML file
+            config = yaml_config.get('options', {})
+            print("Config loaded from config.yaml: " + json.dumps(config))
 
-else:
-    sys.exit("No config file found")
+    # No configuration file found
+    else:
+        sys.exit("Error: No config file found (options.json or config.yaml)")
 
-# Read timeout and connection timeout values from config.yaml
+    return config
+
+# Function to process and validate queries_delay value
+def validate_queries_delay(queries_delay):
+    if isinstance(queries_delay, str):
+        # Replace commas with dots if any
+        queries_delay = queries_delay.replace(",", ".")
+    
+    try:
+        # Convert to float, raise error if invalid
+        return float(queries_delay)
+    except ValueError:
+        print(f"Error: 'queries_delay' must be a valid number. Found: {queries_delay}")
+        sys.exit(1)  # Exit if invalid value is provided
+
+# Load the configuration
+config = load_config()
+
+# Get values from the configuration, with defaults where necessary
 read_timeout = config.get('read_timeout', 30)  # Default to 30 seconds if not specified
 connection_timeout = config.get('connection_timeout', 3)  # Default to 3 seconds if not specified
+
+# Validate and process queries_delay value
+queries_delay = config.get('queries_delay', '0.1')  # Default to '0.1' if not specified
+queries_delay = validate_queries_delay(queries_delay)
+
+# Print the config values for confirmation
+print(f"Connection Timeout: {connection_timeout} seconds")
+print(f"Queries Delay: {queries_delay} seconds")
+print(f"Read Timeout: {read_timeout} seconds")
 
 ##
 ###########################################
@@ -166,7 +200,7 @@ while True:
         #    continue
 
         # Query for Battery 1 Block Voltage
-        time.sleep(0.1)
+        time.sleep(queries_delay)
         s.send(bat_1_get_block_voltage)
         bat_1_block_voltage = s.recv(BUFFER_SIZE)
         if not validate_response_length(bat_1_block_voltage, 37):
@@ -174,7 +208,7 @@ while True:
             bat_1_block_voltage = None
 
         # Query for Battery 1 Cells Voltage
-        time.sleep(0.1)
+        time.sleep(queries_delay)
         s.send(bat_1_get_cells_voltage)
         bat_1_cells_voltage = s.recv(BUFFER_SIZE)
         if not validate_response_length(bat_1_cells_voltage, 37):
@@ -182,7 +216,7 @@ while True:
             bat_1_cells_voltage = None
 
         # Query for Battery 1 Temperature
-        time.sleep(0.1)
+        time.sleep(queries_delay)
         s.send(bat_1_get_temperature)
         bat_1_temperature = s.recv(BUFFER_SIZE)
         if not validate_response_length(bat_1_temperature, 13):
@@ -210,7 +244,7 @@ while True:
             #    continue
 
             # Query for Battery 2 Block Voltage
-            time.sleep(0.1)
+            time.sleep(queries_delay)
             s.send(bat_2_get_block_voltage)
             bat_2_block_voltage = s.recv(BUFFER_SIZE)
             if not validate_response_length(bat_2_block_voltage, 37):
@@ -218,7 +252,7 @@ while True:
                 bat_2_block_voltage = None
 
             # Query for Battery 2 Cells Voltage
-            time.sleep(0.1)
+            time.sleep(queries_delay)
             s.send(bat_2_get_cells_voltage)
             bat_2_cells_voltage = s.recv(BUFFER_SIZE)
             if not validate_response_length(bat_2_cells_voltage, 37):
@@ -226,7 +260,7 @@ while True:
                 bat_2_cells_voltage = None
 
             # Query for Battery 2 Temperature
-            time.sleep(0.1)
+            time.sleep(queries_delay)
             s.send(bat_2_get_temperature)
             bat_2_temperature = s.recv(BUFFER_SIZE)
             if not validate_response_length(bat_2_temperature, 13):
@@ -251,9 +285,9 @@ while True:
         # Static variables for checking voltages and cells
         cell_min_limit = 2450
         cell_max_limit = 4750
-        volt_min_limit = 4000
-        volt_max_limit = 6000
-
+        volt_min_limit = 40.00
+        volt_max_limit = 60.00
+        
         def process_battery_data(battery_num, block_voltage, cells_voltage, temperature_data):
             if block_voltage is not None:
                 # Process block voltage and cells voltage for each battery
@@ -262,21 +296,24 @@ while True:
                 voltage_hex = block_voltage_hex[10:-60]
                 charged_hex = block_voltage_hex[14:-56]
                 cycle_hex = block_voltage_hex[34:-36]
-                
+        
                 voltage_dec = int(voltage_hex, 16)
                 charged_dec = int(charged_hex, 16)
                 cycle_dec = int(cycle_hex, 16)
                 current_dec = int(current_hex, 16)
+        
                 if current_dec >= 0x8000:  # Check if the value is greater than or equal to 32768 (two's complement for negative numbers)
                     current_dec -= 0x10000  # Convert to signed decimal using two's complement
 
+                # Format SOC, Current, and Charged percentage
+                formatted_voltage = round(voltage_dec / 100, 2)  # Dividing by 100 to get the correct voltage (e.g., 5399 -> 53.99)
+                formatted_current = round(current_dec / 100, 2)  # Dividing by 100 to get the current in A
+                formatted_charged = round(charged_dec / 10, 1)    # Dividing by 10 to get the charged percentage (e.g., 1000 -> 100.0)
 
-                # Format SOC, Current and Charged percentage
-                formatted_voltage = round(voltage_dec / 100, 2)  # Dividing by 100 to get in correct format (e.g., 5399 -> 53.99)
-                formatted_current = round(current_dec / 100, 2)  # Dividing by 100 to get in correct format
-                formatted_charged = round(charged_dec / 10, 1)    # Dividing by 10 to get the percentage (e.g., 1000 -> 100.0)
+                # Calculate wattage (power in watts)
+                wattage = round(formatted_current * formatted_voltage, 2)  # Voltage * Current, both in correct units
 
-                print(f"Battery {battery_num} SOC: {formatted_voltage} V, Charged: {formatted_charged} %, Cycles: {cycle_dec}, Current: {formatted_current} A")
+                print(f"Battery {battery_num} SOC: {formatted_voltage} V, Charged: {formatted_charged} %, Cycles: {cycle_dec}, Current: {formatted_current} A, Power: {wattage} W")
 
             if cells_voltage is not None:
                 cells_voltage_hex = binascii.hexlify(cells_voltage)
@@ -296,7 +333,8 @@ while True:
      #           if temperatures:
      #               print(f"Battery {battery_num} Temperatures: {', '.join(map(str, temperatures))}°C")
 
-            return voltage_dec, charged_dec, cycle_dec, cells, temperatures, formatted_current
+            return formatted_voltage, formatted_charged, cycle_dec, cells, temperatures, formatted_current, wattage
+
 
         def process_extra_temperature_data(battery_num, temperature_data):
             if temperature_data is not None:
@@ -318,7 +356,7 @@ while True:
             bat_1_mos_temp, bat_1_env_temp = process_extra_temperature_data(1, bat_1_extra_temperature)
 
         # Process Battery 1 Temperatures
-        bat_1_voltage, bat_1_charged, bat_1_cycle, bat_1_cells, bat_1_temps, bat_1_current = process_battery_data(1, bat_1_block_voltage, bat_1_cells_voltage, bat_1_temperature)
+        bat_1_voltage, bat_1_charged, bat_1_cycle, bat_1_cells, bat_1_temps, bat_1_current, bat_1_wattage = process_battery_data(1, bat_1_block_voltage, bat_1_cells_voltage, bat_1_temperature)
 
         # Now print Battery 1 Temperatures followed by MOS and Env temperatures
         if bat_1_temps:
@@ -333,7 +371,7 @@ while True:
 
         # Process Battery 2 Temperatures
         if num_batteries > 1:
-            bat_2_voltage, bat_2_charged, bat_2_cycle, bat_2_cells, bat_2_temps, bat_2_current = process_battery_data(2, bat_2_block_voltage, bat_2_cells_voltage, bat_2_temperature)
+            bat_2_voltage, bat_2_charged, bat_2_cycle, bat_2_cells, bat_2_temps, bat_2_current, bat_2_wattage = process_battery_data(2, bat_2_block_voltage, bat_2_cells_voltage, bat_2_temperature)
 
             # Now print Battery 2 Temperatures followed by MOS and Env temperatures
             if bat_2_temps:
@@ -355,6 +393,7 @@ while True:
                 'b1soc': bat_1_charged,
                 'b1cycl': bat_1_cycle,
                 'b1cur': bat_1_current,
+                'b1power': bat_1_wattage,
                 **{f'b1c{i+1}': bat_1_cells[i] for i in range(16)},
                 **{f'b1temp{i+1}': bat_1_temps[i] for i in range(4)},  # Only 4 sensors per battery
             }
@@ -379,6 +418,7 @@ while True:
                 'b2soc': bat_2_charged,
                 'b2cycl': bat_2_cycle,
                 'b2cur': bat_2_current,
+                'b2power': bat_2_wattage,
                 **{f'b2c{i+1}': bat_2_cells[i] for i in range(16)},
                 **{f'b2temp{i+1}': bat_2_temps[i] for i in range(4)},  # Only 4 sensors per battery
             }
