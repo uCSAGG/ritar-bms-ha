@@ -10,7 +10,8 @@ Instalation : </br>
 4 - Take examples below, ajust for self </br>
 
 UPDATE 1.1 - added cells temperature sensors 1-4 for batteries 1-2, example templates updated</br>
-UPDATE 1.2 - added MOS and Environment temperature sensors, major bugfixes, stability improvements, reading timeout set over config, example templates updated with new sensors.
+UPDATE 1.2 - added MOS and Environment temperature sensors, major bugfixes, stability improvements, reading timeout set over config, example templates updated with new sensors. </br>
+UPDATE 1.3 - added Current charge/discharge Ampers sensor, example templates updated with new sensor.
 
 Homeassitant configuration examples : https://github.com/mamontuka/ritar-bms/tree/main/standalone_web_service/ritar-bms/web_ui/examples </br>
 
