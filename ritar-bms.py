@@ -26,9 +26,11 @@ elif os.path.exists('config.yaml'):
 else:
     sys.exit("No config file found")
 
-# Read timeout value from config.yaml
+# Read timeout and connection timeout values from config.yaml
 read_timeout = config.get('read_timeout', 30)  # Default to 30 seconds if not specified
+connection_timeout = config.get('connection_timeout', 3)  # Default to 3 seconds if not specified
 
+##
 ###########################################
 ########## network RS485 gateway ##########
 ###########################################
@@ -146,7 +148,7 @@ while True:
         try:
             print("Connect to RS485 Ethernet Gate: ", TCP_IP, ":", TCP_PORT)
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(2)
+            s.settimeout(connection_timeout)  # Set the connection timeout from the config.yaml
             s.connect((TCP_IP, TCP_PORT))
             print("RS485 Ethernet Gate CONNECTED")
             print("-----------------------------------------------------------------------------------------------------------------------")
