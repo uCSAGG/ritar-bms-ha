@@ -6,7 +6,7 @@ RUN apk add --no-cache python3
 
 RUN mkdir /web_ui
 RUN mkdir /web_ui/api
-RUN touch /web_ui/api/ritar-bat-1.xml | touch /web_ui/api/ritar-bat-2.xml
+RUN touch /web_ui/api/ritar-bat-1.xml | touch /web_ui/api/ritar-bat-2.xml | touch /web_ui/api/ritar-bat-3.xml | touch /web_ui/api/ritar-bat-4.xml
 
 WORKDIR /web_ui
 
