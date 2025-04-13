@@ -35,18 +35,22 @@ def load_config():
 
     return config
 
-# Function to process and validate queries_delay value
-def validate_queries_delay(queries_delay):
-    if isinstance(queries_delay, str):
-        # Replace commas with dots if any
-        queries_delay = queries_delay.replace(",", ".")
-    
-    try:
-        # Convert to float, raise error if invalid
-        return float(queries_delay)
-    except ValueError:
-        print(f"Error: 'queries_delay' must be a valid number. Found: {queries_delay}")
-        sys.exit(1)  # Exit if invalid value is provided
+# Function to process and validate delay values
+def validate_queries_delay(queries_delay, extra_queries_delay, next_battery_delay):
+    def convert_to_float(value, name):
+        if isinstance(value, str):
+            value = value.replace(",", ".")
+        try:
+            return float(value)
+        except ValueError:
+            print(f"Error: '{name}' must be a valid number. Found: {value}")
+            sys.exit(1)
+
+    queries_delay = convert_to_float(queries_delay, "queries_delay")
+    extra_queries_delay = convert_to_float(extra_queries_delay, "extra_queries_delay")
+    next_battery_delay = convert_to_float(next_battery_delay, "next_battery_delay")
+
+    return queries_delay, extra_queries_delay, next_battery_delay
 
 # Load the configuration
 config = load_config()
@@ -55,13 +59,21 @@ config = load_config()
 read_timeout = config.get('read_timeout', 30)  # Default to 30 seconds if not specified
 connection_timeout = config.get('connection_timeout', 3)  # Default to 3 seconds if not specified
 
-# Validate and process queries_delay value
+# Fetch values from config with defaults
 queries_delay = config.get('queries_delay', '0.1')  # Default to '0.1' if not specified
-queries_delay = validate_queries_delay(queries_delay)
+extra_queries_delay = config.get('extra_queries_delay', '0.1')  # Default to '0.1' if not specified
+next_battery_delay = config.get('next_battery_delay', '0.5')  # Default to '0.5' if not specified
+
+# Validate and convert all three
+queries_delay, extra_queries_delay, next_battery_delay = validate_queries_delay(
+    queries_delay, extra_queries_delay, next_battery_delay
+)
 
 # Print the config values for confirmation
 print(f"Connection Timeout: {connection_timeout} seconds")
 print(f"Queries Delay: {queries_delay} seconds")
+print(f"Extra Queries Delay: {extra_queries_delay} seconds")
+print(f"Next Battery Delay: {next_battery_delay} seconds")
 print(f"Read Timeout: {read_timeout} seconds")
 
 ##
@@ -86,19 +98,41 @@ BUFFER_SIZE = 4096
 # Add a setting for the number of batteries
 num_batteries = config.get('num_batteries', 1)  # Default to 1 battery if not specified
 
-# Assuming 'bat_1' and 'bat_2' queries are defined
-bat_1_get_block_voltage = b'\x01\x03\x00\x00\x00\x10\x44\x06'
-bat_1_get_cells_voltage = b'\x01\x03\x00\x28\x00\x10\xc4\x0e'
+# Battery 1 Queries
+bat_1_get_block_voltage = b'\x01\x03\x00\x00\x00\x10\x44\x06'  # Battery voltage query for Battery 1
+bat_1_not_decrypted_1 = b'\x01\x03\x00\x21\x00\x01\xd4\x00'  # Unknown at now
+bat_1_get_cells_voltage = b'\x01\x03\x00\x28\x00\x10\xc4\x0e'  # Cells voltage query for Battery 1
 bat_1_get_temperature = b'\x01\x03\x00\x78\x00\x04\xc4\x10'  # Temperature query for Battery 1
-bat_2_get_block_voltage = b'\x02\x03\x00\x00\x00\x10\x44\x35'
-bat_2_get_cells_voltage = b'\x02\x03\x00\x28\x00\x10\xc4\x3d'
-bat_2_get_temperature = b'\x02\x03\x00\x78\x00\x04\xc4\x23'  # Temperature query for Battery 2
-bat_1_get_extra_temperature = b'\x01\x03\x00\x91\x00\x0A\x94\x20'  # Extra temperature query for Battery 1
-bat_2_get_extra_temperature = b'\x02\x03\x00\x91\x00\x0A\x94\x13'  # Extra temperature query for Battery 2
+bat_1_not_decrypted_2 = b'\x01\x03\x00\x9b\x00\x02\xb5\xe4'  # Unknown at now
+bat_1_get_extra_temperature = b'\x01\x03\x00\x91\x00\x0a\x94\x20'  # Extra temperature query for Battery 1
+bat_1_not_decrypted_3 = b'\x01\x03\x00\xef\x00\x06\xf4\x3d'  # Unknown at now
 
-# Ping queries for both batteries
-ping_battery_1 = b'\x01\x03\x00\x21\x00\x01\xd4\x00'
-ping_battery_2 = b'\x02\x03\x00\x21\x00\x01\xd4\x33'
+# Battery 2 Queries
+bat_2_get_block_voltage = b'\x02\x03\x00\x00\x00\x10\x44\x35'  # Battery voltage query for Battery 2
+bat_2_not_decrypted_1 = b'\x02\x03\x00\x21\x00\x01\xd4\x33'  # Unknown at now
+bat_2_get_cells_voltage = b'\x02\x03\x00\x28\x00\x10\xc4\x3d'  # Cells voltage query for Battery 2
+bat_2_get_temperature = b'\x02\x03\x00\x78\x00\x04\xc4\x23'  # Temperature query for Battery 2
+bat_2_not_decrypted_2 = b'\x02\x03\x00\x9b\x00\x02\xb5\xd7'  # Unknown at now
+bat_2_get_extra_temperature = b'\x02\x03\x00\x91\x00\x0a\x94\x13'  # Extra temperature query for Battery 2
+bat_2_not_decrypted_3 = b'\x02\x03\x00\xef\x00\x06\xf4\x0e'  # Unknown at now
+
+# Battery 3 Queries
+bat_3_get_block_voltage = b'\x03\x03\x00\x00\x00\x10\x45\xe4'  # Battery voltage query for Battery 3
+bat_3_not_decrypted_1 = b'\x03\x03\x00\x21\x00\x01\xd5\xe2'  # Unknown at now
+bat_3_get_cells_voltage = b'\x03\x03\x00\x28\x00\x10\xc5\xec'  # Cells voltage query for Battery 3
+bat_3_get_temperature = b'\x03\x03\x00\x78\x00\x04\xc5\xf2'  # Temperature query for Battery 3
+bat_3_not_decrypted_2 = b'\x03\x03\x00\x9b\x00\x02\xb4\x06'  # Unknown at now
+bat_3_get_extra_temperature = b'\x03\x03\x00\x91\x00\x0a\x95\xc2'  # Extra temperature query for Battery 3
+bat_3_not_decrypted_3 = b'\x03\x03\x00\xef\x00\x06\xf5\xdf'  # Unknown at now
+
+# Battery 4 Queries
+bat_4_get_block_voltage = b'\x04\x03\x00\x00\x00\x10\x44\x53'  # Battery voltage query for Battery 4
+bat_4_not_decrypted_1 = b'\x04\x03\x00\x21\x00\x01\xd4\x55'  # Unknown at now
+bat_4_get_cells_voltage = b'\x04\x03\x00\x28\x00\x10\xc4\x5b'  # Cells voltage query for Battery 4
+bat_4_get_temperature = b'\x04\x03\x00\x78\x00\x04\xc4\x45'  # Temperature query for Battery 4
+bat_4_not_decrypted_2 = b'\x04\x03\x00\x9b\x00\x02\xb5\xb1'  # Unknown at now
+bat_4_get_extra_temperature = b'\x04\x03\x00\x91\x00\x0a\x94\x75'  # Extra temperature query for Battery 4
+bat_4_not_decrypted_3 = b'\x04\x03\x00\xef\x00\x06\xf4\x68'  # Unknown at now
 
 # Function to validate response length
 def validate_response_length(response, expected_length):
@@ -108,21 +142,21 @@ def validate_response_length(response, expected_length):
     return True
 
 # Function to validate ping response
-def validate_ping_response(response, battery_num):
-    if battery_num == 1:
-        valid_response = b'\x01\x03\x02\xfa\xaf\xba\x98'
-    elif battery_num == 2:
-        valid_response = b'\x02\x03\x02\xfa\xaf\xfe\x98'
-    else:
-        print("Invalid battery number")
-        return False
+#def validate_ping_response(response, battery_num):
+#    if battery_num == 1:
+#        valid_response = b'\x01\x03\x02\xfa\xaf\xba\x98'
+#    elif battery_num == 2:
+#        valid_response = b'\x02\x03\x02\xfa\xaf\xfe\x98'
+#    else:
+#        print("Invalid battery number")
+#        return False
 
-    if response == valid_response:
-        print(f"Battery {battery_num} Ping Successful")
-        return True
-    else:
-        print(f"Battery {battery_num} Ping Failed")
-        return False
+#    if response == valid_response:
+#        print(f"Battery {battery_num} Ping Successful")
+#        return True
+#    else:
+#        print(f"Battery {battery_num} Ping Failed")
+#        return False
 
 # Hex to temperature conversion function
 def hex_to_temperature(hex_string):
@@ -168,7 +202,7 @@ def hex_to_temperature(hex_string):
 def is_valid_temperature(temp):
     if temp is None:
         return False
-    if temp < -20 or temp > 100:
+    if temp < -50 or temp > 70:
         return False
     return True
 
@@ -188,12 +222,12 @@ while True:
             print("-----------------------------------------------------------------------------------------------------------------------")
         except OSError as msg:
             print(f"RS485 Ethernet Gate connection ERROR: {msg}")
-            time.sleep(15)
+            time.sleep(30)
             continue
 
         ## Ping Battery 1
         #time.sleep(1)
-        #s.send(ping_battery_1)
+        #s.send(bat_1_not_decrypted_1)
         #ping_battery_1_response = s.recv(BUFFER_SIZE)
         #if not validate_ping_response(ping_battery_1_response, 1):
         #    print("Invalid response for Battery 1 Ping, skipping...")
@@ -225,7 +259,7 @@ while True:
 
         # Now, only query for Extra Temperature if the regular temperature response was successful
         if bat_1_temperature:
-            time.sleep(0.2)
+            time.sleep(extra_queries_delay)
             s.send(bat_1_get_extra_temperature)
             bat_1_extra_temperature = s.recv(BUFFER_SIZE)
             if not validate_response_length(bat_1_extra_temperature, 25):
@@ -236,8 +270,8 @@ while True:
         if num_batteries > 1:
 
             ## Ping Battery 2
-            #time.sleep(2)
-            #s.send(ping_battery_2)
+            time.sleep(next_battery_delay)
+            #s.send(bat_2_not_decrypted_1)
             #ping_battery_2_response = s.recv(BUFFER_SIZE)
             #if not validate_ping_response(ping_battery_2_response, 2):
             #    print("Invalid response for Battery 2 Ping, skipping...")
@@ -269,12 +303,100 @@ while True:
 
             # Now, only query for Extra Temperature if the regular temperature response was successful
             if bat_2_temperature:
-                time.sleep(0.2)
+                time.sleep(extra_queries_delay)
                 s.send(bat_2_get_extra_temperature)
                 bat_2_extra_temperature = s.recv(BUFFER_SIZE)
                 if not validate_response_length(bat_2_extra_temperature, 25):
 #                    print("Invalid response for Battery #2 extra temperature, skipping...")
                     bat_2_extra_temperature = None
+
+        # Query for Battery 3 if available
+        if num_batteries > 2:
+
+            ## Ping Battery 3
+            time.sleep(next_battery_delay)
+            #s.send(bat_3_not_decrypted_1)
+            #ping_battery_3_response = s.recv(BUFFER_SIZE)
+            #if not validate_ping_response(ping_battery_3_response, 3):
+            #    print("Invalid response for Battery 3 Ping, skipping...")
+            #    continue
+
+            # Query for Battery 3 Block Voltage
+            time.sleep(queries_delay)
+            s.send(bat_3_get_block_voltage)
+            bat_3_block_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_block_voltage, 37):
+#                print("Invalid response for battery #3 block voltage, skipping...")
+                bat_3_block_voltage = None
+
+            # Query for Battery 3 Cells Voltage
+            time.sleep(queries_delay)
+            s.send(bat_3_get_cells_voltage)
+            bat_3_cells_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_cells_voltage, 37):
+#                print("Invalid response for battery #3 cells voltage, skipping...")
+                bat_3_cells_voltage = None
+
+            # Query for Battery 3 Temperature
+            time.sleep(queries_delay)
+            s.send(bat_3_get_temperature)
+            bat_3_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_temperature, 13):
+#                print("Invalid response for battery #3 temperature, skipping...")
+                bat_3_temperature = None
+
+            # Now, only query for Extra Temperature if the regular temperature response was successful
+            if bat_3_temperature:
+                time.sleep(extra_queries_delay)
+                s.send(bat_3_get_extra_temperature)
+                bat_3_extra_temperature = s.recv(BUFFER_SIZE)
+                if not validate_response_length(bat_3_extra_temperature, 25):
+#                    print("Invalid response for Battery #3 extra temperature, skipping...")
+                    bat_3_extra_temperature = None
+
+        # Query for Battery 4 if available
+        if num_batteries > 3:
+
+            ## Ping Battery 4
+            time.sleep(next_battery_delay)
+            #s.send(bat_4_not_decrypted_1)
+            #ping_battery_4_response = s.recv(BUFFER_SIZE)
+            #if not validate_ping_response(ping_battery_4_response, 4):
+            #    print("Invalid response for Battery 4 Ping, skipping...")
+            #    continue
+
+            # Query for Battery 4 Block Voltage
+            time.sleep(queries_delay)
+            s.send(bat_4_get_block_voltage)
+            bat_4_block_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_block_voltage, 37):
+#                print("Invalid response for battery #4 block voltage, skipping...")
+                bat_4_block_voltage = None
+
+            # Query for Battery 4 Cells Voltage
+            time.sleep(queries_delay)
+            s.send(bat_4_get_cells_voltage)
+            bat_4_cells_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_cells_voltage, 37):
+#                print("Invalid response for battery #4 cells voltage, skipping...")
+                bat_4_cells_voltage = None
+
+            # Query for Battery 4 Temperature
+            time.sleep(queries_delay)
+            s.send(bat_4_get_temperature)
+            bat_4_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_temperature, 13):
+#                print("Invalid response for battery #4 temperature, skipping...")
+                bat_4_temperature = None
+
+            # Now, only query for Extra Temperature if the regular temperature response was successful
+            if bat_4_temperature:
+                time.sleep(extra_queries_delay)
+                s.send(bat_4_get_extra_temperature)
+                bat_4_extra_temperature = s.recv(BUFFER_SIZE)
+                if not validate_response_length(bat_4_extra_temperature, 25):
+#                    print("Invalid response for Battery #4 extra temperature, skipping...")
+                    bat_4_extra_temperature = None
 
         # Close RS485 stream
         s.close()
@@ -380,6 +502,36 @@ while True:
                 print(f"Battery 2 MOS Temperature: {bat_2_mos_temp}°C , Environment Temperature: {bat_2_env_temp}°C")
                 print("-----------------------------------------------------------------------------------------------------------------------")
 
+        # Process Battery 3 Extra Temperatures (if available)
+        if num_batteries > 2 and bat_3_extra_temperature:
+            bat_3_mos_temp, bat_3_env_temp = process_extra_temperature_data(3, bat_3_extra_temperature)
+
+        # Process Battery 3 Temperatures
+        if num_batteries > 2:
+            bat_3_voltage, bat_3_charged, bat_3_cycle, bat_3_cells, bat_3_temps, bat_3_current, bat_3_wattage = process_battery_data(3, bat_3_block_voltage, bat_3_cells_voltage, bat_3_temperature)
+
+            # Now print Battery 3 Temperatures followed by MOS and Env temperatures
+            if bat_3_temps:
+                print(f"Battery 3 Temperatures: {', '.join(map(str, bat_3_temps))}°C")
+            if bat_3_mos_temp is not None and bat_3_env_temp is not None:
+                print(f"Battery 3 MOS Temperature: {bat_3_mos_temp}°C , Environment Temperature: {bat_3_env_temp}°C")
+                print("-----------------------------------------------------------------------------------------------------------------------")
+
+        # Process Battery 4 Extra Temperatures (if available)
+        if num_batteries > 3 and bat_4_extra_temperature:
+            bat_4_mos_temp, bat_4_env_temp = process_extra_temperature_data(4, bat_4_extra_temperature)
+
+        # Process Battery 4 Temperatures
+        if num_batteries > 3:
+            bat_4_voltage, bat_4_charged, bat_4_cycle, bat_4_cells, bat_4_temps, bat_4_current, bat_4_wattage = process_battery_data(4, bat_4_block_voltage, bat_4_cells_voltage, bat_4_temperature)
+
+            # Now print Battery 4 Temperatures followed by MOS and Env temperatures
+            if bat_4_temps:
+                print(f"Battery 4 Temperatures: {', '.join(map(str, bat_4_temps))}°C")
+            if bat_4_mos_temp is not None and bat_4_env_temp is not None:
+                print(f"Battery 4 MOS Temperature: {bat_4_mos_temp}°C , Environment Temperature: {bat_4_env_temp}°C")
+                print("-----------------------------------------------------------------------------------------------------------------------")
+
         ###################################
         ######## API output ###############
         ###################################
@@ -436,10 +588,60 @@ while True:
             with open('/web_ui/api/ritar-bat-2.xml', 'wb') as file:
                 tree.write(file, encoding="utf-8", xml_declaration=False)
 
+        # Handle Battery 3 output (if available)
+        if num_batteries > 2 and volt_min_limit <= bat_3_voltage <= volt_max_limit and cell_min_limit <= bat_3_cells[0] <= cell_max_limit:
+            ritar_bms3 = {
+                'b3volt': bat_3_voltage,
+                'b3soc': bat_3_charged,
+                'b3cycl': bat_3_cycle,
+                'b3cur': bat_3_current,
+                'b3power': bat_3_wattage,
+                **{f'b3c{i+1}': bat_3_cells[i] for i in range(16)},
+                **{f'b3temp{i+1}': bat_3_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            }
+
+            # Include MOS and Environment Temperature for Battery 3 if available
+            if bat_3_mos_temp is not None and bat_3_env_temp is not None:
+                ritar_bms3['b3mos'] = bat_3_mos_temp
+                ritar_bms3['b3env'] = bat_3_env_temp
+
+            root = ET.Element('response')
+            for key, value in ritar_bms3.items():
+                child = ET.SubElement(root, key)
+                child.text = str(value)
+            tree = ET.ElementTree(root)
+            with open('/web_ui/api/ritar-bat-3.xml', 'wb') as file:
+                tree.write(file, encoding="utf-8", xml_declaration=False)
+
+        # Handle Battery 4 output (if available)
+        if num_batteries > 3 and volt_min_limit <= bat_4_voltage <= volt_max_limit and cell_min_limit <= bat_4_cells[0] <= cell_max_limit:
+            ritar_bms4 = {
+                'b4volt': bat_4_voltage,
+                'b4soc': bat_4_charged,
+                'b4cycl': bat_4_cycle,
+                'b4cur': bat_4_current,
+                'b4power': bat_4_wattage,
+                **{f'b4c{i+1}': bat_4_cells[i] for i in range(16)},
+                **{f'b4temp{i+1}': bat_4_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            }
+
+            # Include MOS and Environment Temperature for Battery 4 if available
+            if bat_4_mos_temp is not None and bat_4_env_temp is not None:
+                ritar_bms4['b4mos'] = bat_4_mos_temp
+                ritar_bms4['b4env'] = bat_4_env_temp
+
+            root = ET.Element('response')
+            for key, value in ritar_bms4.items():
+                child = ET.SubElement(root, key)
+                child.text = str(value)
+            tree = ET.ElementTree(root)
+            with open('/web_ui/api/ritar-bat-4.xml', 'wb') as file:
+                tree.write(file, encoding="utf-8", xml_declaration=False)
+
         # Add the delay before the next iteration
    #     time.sleep(10)
 
     except Exception as e:
 #        print(f"Error: {e}")
-        time.sleep(15)
+        time.sleep(30)
     
