@@ -12,7 +12,8 @@ Instalation : </br>
 UPDATE 1.1 - added cells temperature sensors 1-4 for batteries 1-2, example templates updated</br>
 UPDATE 1.2 - added MOS and Environment temperature sensors, major bugfixes, stability improvements, reading timeout set over config, example templates updated with new sensors. </br>
 UPDATE 1.3 - added Current charge/discharge Ampers sensor, example templates updated with new sensor. </br>
-UPDATE 1.4 - added WATTmeter charge/discharge power sensor, configurable RS485 connection timeout, configurable queries delay (usualy not need to be ajusted, but let it be), reworked voltage and SOC sensors API annoncement,  example templates updated.
+UPDATE 1.4 - added WATTmeter charge/discharge power sensor, configurable RS485 connection timeout, configurable queries delay (usualy not need to be ajusted, but let it be), reworked voltage and SOC sensors API annoncement,  example templates updated. </br>
+UPDATE 1.5 - added support for up to 4 batteries, more configurable queries delays, example templates updated. </br>
 
 Homeassitant configuration examples : https://github.com/mamontuka/ritar-bms/tree/main/standalone_web_service/ritar-bms/web_ui/examples </br>
 
