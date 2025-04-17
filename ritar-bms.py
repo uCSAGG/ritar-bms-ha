@@ -8,6 +8,10 @@ import sys
 import yaml
 import json
 import xml.etree.ElementTree as ET
+import paho.mqtt.client as mqtt
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Function to load configuration from JSON or YAML
 def load_config():
@@ -18,7 +22,7 @@ def load_config():
         print("Loading options.json")
         with open('/data/options.json', 'r') as file:
             config = json.load(file)
-            print("Config loaded from options.json: " + json.dumps(config))
+#            print("Config loaded from options.json: " + json.dumps(config))
 
     # Check for config.yaml
     elif os.path.exists('config.yaml'):
@@ -64,19 +68,47 @@ queries_delay = config.get('queries_delay', '0.1')  # Default to '0.1' if not sp
 extra_queries_delay = config.get('extra_queries_delay', '0.1')  # Default to '0.1' if not specified
 next_battery_delay = config.get('next_battery_delay', '0.5')  # Default to '0.5' if not specified
 
+# MQTT connection parameters (load from config if needed)
+mqtt_broker = config.get("mqtt_broker", "core-mosquitto")
+mqtt_port = config.get("mqtt_port", 1883)
+mqtt_username = config.get("mqtt_username", "homeassistant")
+mqtt_password = config.get("mqtt_password", "mqtt_password_here")
+
 # Validate and convert all three
 queries_delay, extra_queries_delay, next_battery_delay = validate_queries_delay(
     queries_delay, extra_queries_delay, next_battery_delay
 )
 
 # Print the config values for confirmation
+print(f"...")
+print(f"RS485 to Ethernet Gate...")
+print(f"IP Address: {config['rs485gate_ip']}")
+print(f"Port: {config['rs485gate_port']} ")
+print(f"...")
 print(f"Connection Timeout: {connection_timeout} seconds")
 print(f"Queries Delay: {queries_delay} seconds")
 print(f"Extra Queries Delay: {extra_queries_delay} seconds")
 print(f"Next Battery Delay: {next_battery_delay} seconds")
 print(f"Read Timeout: {read_timeout} seconds")
+print(f"...")
+print(f"MQTT...")
+print(f"...")
+print(f"Broker: {mqtt_broker}, Port: {mqtt_port}, Username: {mqtt_username}, Password: **********  ")
+print(f"...")
 
-##
+# Initialize MQTT client
+client = mqtt.Client(protocol=mqtt.MQTTv311)
+client.username_pw_set(mqtt_username, mqtt_password)
+client.connect(mqtt_broker, mqtt_port, 60)
+client.loop_start()
+
+def on_disconnect(client, userdata, rc):
+    print("MQTT Disconnected. Reconnecting...")
+    client.reconnect()
+
+client.on_disconnect = on_disconnect
+
+
 ###########################################
 ########## network RS485 gateway ##########
 ###########################################
@@ -205,6 +237,88 @@ def is_valid_temperature(temp):
     if temp < -50 or temp > 70:
         return False
     return True
+
+##################################################
+############### MQTT Procedures ##################
+##################################################
+
+# Let's assume we have a global dictionary to store the last valid cycle count value
+last_valid_cycle_count = {}
+
+# Function for MQTT Sensors announcements
+def announce_battery_sensors(client, battery_index, battery_data):
+    device_id = f"ritar_{battery_index}"
+    topic_prefix = f"homeassistant/sensor/{device_id}"
+    friendly_device_name = f"Ritar Battery {battery_index}"
+
+    def publish_sensor(sensor_suffix, friendly_name, device_class, unit, value, state_class=None):
+        unique_id = f"{device_id}_{sensor_suffix}"
+        config_topic = f"{topic_prefix}/{sensor_suffix}/config"
+        state_topic = f"{topic_prefix}/{sensor_suffix}"
+
+        payload = {
+            "name": friendly_name,            # Friendly display name
+            "object_id": unique_id,           # Controls entity_id
+            "state_topic": state_topic,
+            "device_class": device_class,
+            "unit_of_measurement": unit,
+            "value_template": "{{ value_json.state }}",
+            "unique_id": unique_id,
+            "device": {
+                "identifiers": [device_id],
+                "name": friendly_device_name,
+                "model": "BAT-5KWH-51.2V",
+                "manufacturer": "Ritar"
+            }
+        }
+        
+        # If a state_class is passed, add it to the payload
+        if state_class:
+            payload["state_class"] = state_class
+
+        # Publish the configuration and the state
+        client.publish(config_topic, json.dumps(payload), retain=True)
+        client.publish(state_topic, json.dumps({"state": value}), retain=True)
+
+    # Base sensors
+    publish_sensor("voltage", "Voltage", "voltage", "V", battery_data["voltage"])
+    publish_sensor("soc", "SOC", "battery", "%", battery_data["soc"])
+    publish_sensor("current", "Current", "current", "A", battery_data["current"])
+    publish_sensor("power", "Power", "power", "W", battery_data["power"])
+
+    # Handle Cycle Count with validation
+    cycle_count = battery_data["cycle"]
+
+    # Ensure the cycle count is a valid integer
+    if isinstance(cycle_count, int):
+        # Only update if the cycle count is valid and integer
+        last_valid_cycle_count[battery_index] = cycle_count
+        publish_sensor("cycle", "Cycle Count", None, None, cycle_count, state_class="total_increasing")
+    else:
+        # If invalid or "unknown", retain the last valid cycle count
+        if battery_index in last_valid_cycle_count:
+            cycle_count = last_valid_cycle_count[battery_index]
+            publish_sensor("cycle", "Cycle Count", None, None, cycle_count, state_class="total_increasing")
+        else:
+            # No valid cycle count yet, set it to a default value or ignore update
+            print(f"Invalid cycle count: {cycle_count}. Retaining previous valid value.")
+
+    # Cells
+    for i, cell_voltage in enumerate(battery_data.get("cells", []), start=1):
+        publish_sensor(f"cell_{i}", f"Cell {i}", "voltage", "mV", cell_voltage)
+
+    # Temps (regular)
+    for i, temp in enumerate(battery_data.get("temps", []), start=1):
+        suffix = f"temp_{i}"  # sensor.ritar_1_temp_1, etc.
+        name = f"Temp {i}"
+        publish_sensor(suffix, name, "temperature", "°C", temp)
+
+    # Special temp sensors
+    if battery_data.get("mos_temp") is not None:
+        publish_sensor("temp_mos", "T MOS", "temperature", "°C", battery_data["mos_temp"])
+
+    if battery_data.get("env_temp") is not None:
+        publish_sensor("temp_env", "T ENV", "temperature", "°C", battery_data["env_temp"])
 
 # Main infinite loop
 while True:
@@ -538,106 +652,66 @@ while True:
         
         #print(f"TEST Current: {bat_1_current} A , {bat_2_current} A")
         
-        # Handle Battery 1 output
+        # Battery 1
         if volt_min_limit <= bat_1_voltage <= volt_max_limit and cell_min_limit <= bat_1_cells[0] <= cell_max_limit:
-            ritar_bms1 = {
-                'b1volt': bat_1_voltage,
-                'b1soc': bat_1_charged,
-                'b1cycl': bat_1_cycle,
-                'b1cur': bat_1_current,
-                'b1power': bat_1_wattage,
-                **{f'b1c{i+1}': bat_1_cells[i] for i in range(16)},
-                **{f'b1temp{i+1}': bat_1_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            bat_1_data = {
+                "voltage": bat_1_voltage,
+                "soc": bat_1_charged,
+                "cycle": bat_1_cycle,
+                "current": bat_1_current,
+                "power": bat_1_wattage,
+                "cells": bat_1_cells,
+                "temps": bat_1_temps,
+                "mos_temp": bat_1_mos_temp,
+                "env_temp": bat_1_env_temp
             }
-            
-            # Include MOS and Environment Temperature for Battery 1 if available
-            if bat_1_mos_temp is not None and bat_1_env_temp is not None:
-                ritar_bms1['b1mos'] = bat_1_mos_temp
-                ritar_bms1['b1env'] = bat_1_env_temp
+            announce_battery_sensors(client, 1, bat_1_data)
 
-            root = ET.Element('response')
-            for key, value in ritar_bms1.items():
-                child = ET.SubElement(root, key)
-                child.text = str(value)
-            tree = ET.ElementTree(root)
-            with open('/web_ui/api/ritar-bat-1.xml', 'wb') as file:
-                tree.write(file, encoding="utf-8", xml_declaration=False)
-
-        # Handle Battery 2 output (if available)
+        # Battery 2  (if available)
         if num_batteries > 1 and volt_min_limit <= bat_2_voltage <= volt_max_limit and cell_min_limit <= bat_2_cells[0] <= cell_max_limit:
-            ritar_bms2 = {
-                'b2volt': bat_2_voltage,
-                'b2soc': bat_2_charged,
-                'b2cycl': bat_2_cycle,
-                'b2cur': bat_2_current,
-                'b2power': bat_2_wattage,
-                **{f'b2c{i+1}': bat_2_cells[i] for i in range(16)},
-                **{f'b2temp{i+1}': bat_2_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            bat_2_data = {
+                "voltage": bat_2_voltage,
+                "soc": bat_2_charged,
+                "cycle": bat_2_cycle,
+                "current": bat_2_current,
+                "power": bat_2_wattage,
+                "cells": bat_2_cells,
+                "temps": bat_2_temps,
+                "mos_temp": bat_2_mos_temp,
+                "env_temp": bat_2_env_temp
             }
+            announce_battery_sensors(client, 2, bat_2_data)
 
-            # Include MOS and Environment Temperature for Battery 2 if available
-            if bat_2_mos_temp is not None and bat_2_env_temp is not None:
-                ritar_bms2['b2mos'] = bat_2_mos_temp
-                ritar_bms2['b2env'] = bat_2_env_temp
-
-            root = ET.Element('response')
-            for key, value in ritar_bms2.items():
-                child = ET.SubElement(root, key)
-                child.text = str(value)
-            tree = ET.ElementTree(root)
-            with open('/web_ui/api/ritar-bat-2.xml', 'wb') as file:
-                tree.write(file, encoding="utf-8", xml_declaration=False)
-
-        # Handle Battery 3 output (if available)
+        # Battery 3  (if available)
         if num_batteries > 2 and volt_min_limit <= bat_3_voltage <= volt_max_limit and cell_min_limit <= bat_3_cells[0] <= cell_max_limit:
-            ritar_bms3 = {
-                'b3volt': bat_3_voltage,
-                'b3soc': bat_3_charged,
-                'b3cycl': bat_3_cycle,
-                'b3cur': bat_3_current,
-                'b3power': bat_3_wattage,
-                **{f'b3c{i+1}': bat_3_cells[i] for i in range(16)},
-                **{f'b3temp{i+1}': bat_3_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            bat_3_data = {
+                "voltage": bat_3_voltage,
+                "soc": bat_3_charged,
+                "cycle": bat_3_cycle,
+                "current": bat_3_current,
+                "power": bat_3_wattage,
+                "cells": bat_3_cells,
+                "temps": bat_3_temps,
+                "mos_temp": bat_3_mos_temp,
+                "env_temp": bat_3_env_temp
             }
+            announce_battery_sensors(client, 3, bat_3_data)
 
-            # Include MOS and Environment Temperature for Battery 3 if available
-            if bat_3_mos_temp is not None and bat_3_env_temp is not None:
-                ritar_bms3['b3mos'] = bat_3_mos_temp
-                ritar_bms3['b3env'] = bat_3_env_temp
-
-            root = ET.Element('response')
-            for key, value in ritar_bms3.items():
-                child = ET.SubElement(root, key)
-                child.text = str(value)
-            tree = ET.ElementTree(root)
-            with open('/web_ui/api/ritar-bat-3.xml', 'wb') as file:
-                tree.write(file, encoding="utf-8", xml_declaration=False)
-
-        # Handle Battery 4 output (if available)
+        # Battery 4  (if available)
         if num_batteries > 3 and volt_min_limit <= bat_4_voltage <= volt_max_limit and cell_min_limit <= bat_4_cells[0] <= cell_max_limit:
-            ritar_bms4 = {
-                'b4volt': bat_4_voltage,
-                'b4soc': bat_4_charged,
-                'b4cycl': bat_4_cycle,
-                'b4cur': bat_4_current,
-                'b4power': bat_4_wattage,
-                **{f'b4c{i+1}': bat_4_cells[i] for i in range(16)},
-                **{f'b4temp{i+1}': bat_4_temps[i] for i in range(4)},  # Only 4 sensors per battery
+            bat_4_data = {
+                "voltage": bat_4_voltage,
+                "soc": bat_4_charged,
+                "cycle": bat_4_cycle,
+                "current": bat_4_current,
+                "power": bat_4_wattage,
+                "cells": bat_4_cells,
+                "temps": bat_4_temps,
+                "mos_temp": bat_4_mos_temp,
+                "env_temp": bat_4_env_temp
             }
-
-            # Include MOS and Environment Temperature for Battery 4 if available
-            if bat_4_mos_temp is not None and bat_4_env_temp is not None:
-                ritar_bms4['b4mos'] = bat_4_mos_temp
-                ritar_bms4['b4env'] = bat_4_env_temp
-
-            root = ET.Element('response')
-            for key, value in ritar_bms4.items():
-                child = ET.SubElement(root, key)
-                child.text = str(value)
-            tree = ET.ElementTree(root)
-            with open('/web_ui/api/ritar-bat-4.xml', 'wb') as file:
-                tree.write(file, encoding="utf-8", xml_declaration=False)
-
+            announce_battery_sensors(client, 4, bat_4_data)
+            
         # Add the delay before the next iteration
    #     time.sleep(10)
 
