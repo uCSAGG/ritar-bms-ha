@@ -1,6 +1,6 @@
 name: "Ritar BMS"
 description: "Ritar BAT-5KWH-51.2V Battery BMS Logger"
-version: "1.5"
+version: "1.6"
 slug: "ritar_bms"
 url: "https://github.com/mamontuka/ritar-bms-ha"
 init: false
@@ -11,8 +11,6 @@ arch:
   - armv7
   - i386
 startup: services
-ports:
-   50501/tcp: 50501
 options:
   rs485gate_ip: "192.168.0.100"
   rs485gate_port: 50500
@@ -22,6 +20,10 @@ options:
   num_batteries: 1
   next_battery_delay : 0.5
   read_timeout: 30
+  mqtt_broker: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_username: "homeassistant"
+  mqtt_password: "mqtt_password_here"
 #  debug: true
 schema:
   rs485gate_ip: str
@@ -32,4 +34,8 @@ schema:
   num_batteries: int
   next_battery_delay: float
   read_timeout: int
+  mqtt_broker: str
+  mqtt_port: int
+  mqtt_username: str
+  mqtt_password: password
 #  debug: bool
