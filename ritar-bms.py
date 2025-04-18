@@ -59,6 +59,9 @@ def validate_queries_delay(queries_delay, extra_queries_delay, next_battery_dela
 # Load the configuration
 config = load_config()
 
+# Ritar Battery Model
+battery_model = config.get('battery_model', 'BAT-5KWH-51.2V')
+
 # Get values from the configuration, with defaults where necessary
 read_timeout = config.get('read_timeout', 30)  # Default to 30 seconds if not specified
 connection_timeout = config.get('connection_timeout', 3)  # Default to 3 seconds if not specified
@@ -267,7 +270,7 @@ def announce_battery_sensors(client, battery_index, battery_data):
             "device": {
                 "identifiers": [device_id],
                 "name": friendly_device_name,
-                "model": "BAT-5KWH-51.2V",
+                "model": battery_model,
                 "manufacturer": "Ritar"
             }
         }
