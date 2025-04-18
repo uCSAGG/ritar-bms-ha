@@ -1,6 +1,10 @@
 # ritar-bms-ha
 <b>Homeassitant Addon for Ritar BAT-5KWH-51.2V BMS</b></br>
 
+Supported 5, 10, 15KWH models</br>
+
+https://www.gptess.com/lithium-ion_battery_System/66.html
+
 <b>Stable release<b>, based on standalone web service https://github.com/mamontuka/ritar-bms </br>
 
 Instalation : </br>
