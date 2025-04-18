@@ -10,7 +10,7 @@ https://www.gptess.com/lithium-ion_battery_System/66.html
 Instalation : </br>
 1 - Add this repository to addons (three dots) - https://github.com/mamontuka/ritar-bms-ha </br>
 2 - Install this addon </br>
-3 - In addon setings choose RS485 gate IP, port, and how much battery you have (at now supported 1 - 4) </br>
+3 - In addon setings choose RS485 gate IP, port, and how much battery you have (at now supported 1 - 4), MQTT settings </br>
 4 - Take examples below, ajust for self </br>
 
 UPDATE 1.1 - added cells temperature sensors 1-4 for batteries 1-2, example templates updated</br>
