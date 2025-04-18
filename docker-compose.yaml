@@ -6,5 +6,5 @@ services:
     restart: unless-stopped
     privileged: true
     volumes:
-      - ./config.yaml:/web_ui/config.yaml
+      - ./config.yaml:/workdir/config.yaml
       - /dev:/dev
