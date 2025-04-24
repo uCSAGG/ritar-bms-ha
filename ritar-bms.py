@@ -515,7 +515,113 @@ while True:
 #                    print("Invalid response for Battery #4 extra temperature, skipping...")
                     bat_4_extra_temperature = None
 
-        # Close RS485 stream
+        
+
+        # Query for Battery 1
+        time.sleep(queries_delay)
+        s.send(bat_1_get_block_voltage)
+        bat_1_block_voltage = s.recv(BUFFER_SIZE)
+        if not validate_response_length(bat_1_block_voltage, 37):
+            bat_1_block_voltage = None
+
+        time.sleep(queries_delay)
+        s.send(bat_1_get_cells_voltage)
+        bat_1_cells_voltage = s.recv(BUFFER_SIZE)
+        if not validate_response_length(bat_1_cells_voltage, 37):
+            bat_1_cells_voltage = None
+
+        time.sleep(queries_delay)
+        s.send(bat_1_get_temperature)
+        bat_1_temperature = s.recv(BUFFER_SIZE)
+        if not validate_response_length(bat_1_temperature, 13):
+            bat_1_temperature = None
+
+        if bat_1_temperature:
+            time.sleep(extra_queries_delay)
+            s.send(bat_1_get_extra_temperature)
+            bat_1_extra_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_1_extra_temperature, 25):
+                bat_1_extra_temperature = None
+
+        if num_batteries > 1:
+            time.sleep(next_battery_delay)
+            s.send(bat_2_get_block_voltage)
+            bat_2_block_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_2_block_voltage, 37):
+                bat_2_block_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_2_get_cells_voltage)
+            bat_2_cells_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_2_cells_voltage, 37):
+                bat_2_cells_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_2_get_temperature)
+            bat_2_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_2_temperature, 13):
+                bat_2_temperature = None
+
+            if bat_2_temperature:
+                time.sleep(extra_queries_delay)
+                s.send(bat_2_get_extra_temperature)
+                bat_2_extra_temperature = s.recv(BUFFER_SIZE)
+                if not validate_response_length(bat_2_extra_temperature, 25):
+                    bat_2_extra_temperature = None
+
+        if num_batteries > 2:
+            time.sleep(next_battery_delay)
+            s.send(bat_3_get_block_voltage)
+            bat_3_block_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_block_voltage, 37):
+                bat_3_block_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_3_get_cells_voltage)
+            bat_3_cells_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_cells_voltage, 37):
+                bat_3_cells_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_3_get_temperature)
+            bat_3_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_3_temperature, 13):
+                bat_3_temperature = None
+
+            if bat_3_temperature:
+                time.sleep(extra_queries_delay)
+                s.send(bat_3_get_extra_temperature)
+                bat_3_extra_temperature = s.recv(BUFFER_SIZE)
+                if not validate_response_length(bat_3_extra_temperature, 25):
+                    bat_3_extra_temperature = None
+
+        if num_batteries > 3:
+            time.sleep(next_battery_delay)
+            s.send(bat_4_get_block_voltage)
+            bat_4_block_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_block_voltage, 37):
+                bat_4_block_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_4_get_cells_voltage)
+            bat_4_cells_voltage = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_cells_voltage, 37):
+                bat_4_cells_voltage = None
+
+            time.sleep(queries_delay)
+            s.send(bat_4_get_temperature)
+            bat_4_temperature = s.recv(BUFFER_SIZE)
+            if not validate_response_length(bat_4_temperature, 13):
+                bat_4_temperature = None
+
+            if bat_4_temperature:
+                time.sleep(extra_queries_delay)
+                s.send(bat_4_get_extra_temperature)
+                bat_4_extra_temperature = s.recv(BUFFER_SIZE)
+                if not validate_response_length(bat_4_extra_temperature, 25):
+                    bat_4_extra_temperature = None
+
+# Close RS485 stream
         s.close()
 
         #####################################
