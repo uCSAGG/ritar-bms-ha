@@ -555,12 +555,33 @@ while True:
                 print(f"Battery {battery_num} SOC: {formatted_voltage} V, Charged: {formatted_charged} %, Cycles: {cycle_dec}, Current: {formatted_current} A, Power: {wattage} W")
 
             if cells_voltage is not None:
-                cells_voltage_hex = binascii.hexlify(cells_voltage)
-                cells = []
-                for i in range(16):
-                    cell_hex = cells_voltage_hex[6 + (i * 4): 10 + (i * 4)]
-                    cells.append(int(cell_hex, 16))
-                print(f"Battery {battery_num} Cell Voltages: {', '.join(map(str, cells))}")
+                if len(cells_voltage) != 37:
+                    print(f"Battery {battery_num}: Invalid response length for cells voltage. Skipping.")
+                    cells = None
+                elif cells_voltage[0] != battery_num or cells_voltage[1] != 0x03 or cells_voltage[2] != 32:
+                    print(f"Battery {battery_num}: Unexpected header in cell voltage response: {binascii.hexlify(cells_voltage)}. Skipping.")
+                    cells = None
+                else:
+                    cells_voltage_hex = binascii.hexlify(cells_voltage)
+                    cells = []
+                    for i in range(16):
+                        try:
+                            cell_hex = cells_voltage_hex[6 + (i * 4): 10 + (i * 4)]
+                            cell_mv = int(cell_hex, 16)
+                            if cell_min_limit <= cell_mv <= cell_max_limit:
+                                cells.append(cell_mv)
+                            else:
+                                cells.append(None)
+                        except Exception as e:
+                            print(f"Error parsing cell {i + 1}: {e}")
+                            cells.append(None)
+
+                    valid_cells = [v for v in cells if v is not None]
+                    if len(valid_cells) < 8:  # Require at least 8 valid cells
+                        print(f"Battery {battery_num}: Too many invalid cell voltages. Skipping.")
+                        cells = None
+                    else:
+                        print(f"Battery {battery_num} Cell Voltages: {', '.join(str(v) if v is not None else 'X' for v in cells)}")
 
             if temperature_data is not None:
                 temperature_hex = binascii.hexlify(temperature_data)
@@ -594,7 +615,7 @@ while True:
         if bat_1_extra_temperature:
             bat_1_mos_temp, bat_1_env_temp = process_extra_temperature_data(1, bat_1_extra_temperature)
 
-        # Process Battery 1 Temperatures
+        # Process Battery 1
         bat_1_voltage, bat_1_charged, bat_1_cycle, bat_1_cells, bat_1_temps, bat_1_current, bat_1_wattage = process_battery_data(1, bat_1_block_voltage, bat_1_cells_voltage, bat_1_temperature)
 
         # Now print Battery 1 Temperatures followed by MOS and Env temperatures
@@ -608,7 +629,7 @@ while True:
         if num_batteries > 1 and bat_2_extra_temperature:
             bat_2_mos_temp, bat_2_env_temp = process_extra_temperature_data(2, bat_2_extra_temperature)
 
-        # Process Battery 2 Temperatures
+        # Process Battery 2
         if num_batteries > 1:
             bat_2_voltage, bat_2_charged, bat_2_cycle, bat_2_cells, bat_2_temps, bat_2_current, bat_2_wattage = process_battery_data(2, bat_2_block_voltage, bat_2_cells_voltage, bat_2_temperature)
 
@@ -623,7 +644,7 @@ while True:
         if num_batteries > 2 and bat_3_extra_temperature:
             bat_3_mos_temp, bat_3_env_temp = process_extra_temperature_data(3, bat_3_extra_temperature)
 
-        # Process Battery 3 Temperatures
+        # Process Battery 3
         if num_batteries > 2:
             bat_3_voltage, bat_3_charged, bat_3_cycle, bat_3_cells, bat_3_temps, bat_3_current, bat_3_wattage = process_battery_data(3, bat_3_block_voltage, bat_3_cells_voltage, bat_3_temperature)
 
@@ -638,7 +659,7 @@ while True:
         if num_batteries > 3 and bat_4_extra_temperature:
             bat_4_mos_temp, bat_4_env_temp = process_extra_temperature_data(4, bat_4_extra_temperature)
 
-        # Process Battery 4 Temperatures
+        # Process Battery 4
         if num_batteries > 3:
             bat_4_voltage, bat_4_charged, bat_4_cycle, bat_4_cells, bat_4_temps, bat_4_current, bat_4_wattage = process_battery_data(4, bat_4_block_voltage, bat_4_cells_voltage, bat_4_temperature)
 
