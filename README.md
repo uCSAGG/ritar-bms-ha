@@ -1,11 +1,21 @@
 # ritar-bms-ha
-<b>Homeassitant Addon for Ritar BAT-5KWH-51.2V BMS</b></br>
+# <b>Homeassitant Addon for Ritar BAT-5KWH-51.2V BMS</b></br>
 
 Supported 5, 10, 15KWH models</br>
 
 https://www.gptess.com/lithium-ion_battery_System/66.html
 
 <b>Wiring to RS485 to ethernet gate<b> https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/WIRING.md </br>
+
+RS485 to ethernet gate software and documentation : https://github.com/mamontuka/ritar-bms-ha/tree/main/RS-485_to_ethernet_gate </br>
+
+Official monitoring bluetooth android application : https://github.com/mamontuka/ritar-bms-ha/tree/main/android_bluetooth_monitoring_app </br>
+Official service software : https://github.com/mamontuka/ritar-bms-ha/tree/main/official_bms_software </br>
+Official documentation : https://github.com/mamontuka/ritar-bms-ha/tree/main/official_documentation </br>
+Review pictures : https://github.com/mamontuka/ritar-bms-ha/tree/main/battery_review_pictures </br>
+
+BMS protocol reverse engineering examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/bms_protocol_reverse%20engineering </br>
+
 
 Instalation : </br>
 1 - Add this repository to addons (three dots) - https://github.com/mamontuka/ritar-bms-ha </br>
@@ -21,5 +31,5 @@ UPDATE 1.5 - added support for up to 4 batteries, more configurable queries dela
 .<br>
 UPDATE 1.6 - MAJOR UPDATE. API successfuly reworked, now all works over MQTT, not need anymore manual editting configuration.yaml (if you update from previous versions - remove in configuration.yaml all about Ritar batteries REST API ), all statistics from previous REST API sensors will be preserved and NOT disapear. Visit to this addon configuration, for setup MQTT. Restart Homeassistant for properly startup. Entities card examples you still can find by link below.
 
-Homeassitant configuration examples : https://github.com/mamontuka/ritar-bms/tree/main/standalone_web_service/ritar-bms/web_ui/examples </br>
+Homeassitant entities cards examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/homeassistant_entities_cards_examples </br>
 
