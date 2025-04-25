@@ -5,7 +5,7 @@ Supported 5, 10, 15KWH models</br>
 
 https://www.gptess.com/lithium-ion_battery_System/66.html
 
-<b>Stable release<b>, based on standalone web service https://github.com/mamontuka/ritar-bms </br>
+<b>Wiring to RS485 to ethernet gate<b> https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/WIRING.md </br>
 
 Instalation : </br>
 1 - Add this repository to addons (three dots) - https://github.com/mamontuka/ritar-bms-ha </br>
