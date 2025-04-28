@@ -29,8 +29,9 @@ UPDATE 1.3 - added Current charge/discharge Ampers sensor, example templates upd
 UPDATE 1.4 - added WATTmeter charge/discharge power sensor, configurable RS485 connection timeout, configurable queries delay (usualy not need to be ajusted, but let it be), reworked voltage and SOC sensors API annoncement,  example templates updated. </br>
 UPDATE 1.5 - added support for up to 4 batteries, more configurable queries delays, example templates updated. </br>
 UPDATE 1.6 - MAJOR UPDATE. API successfuly reworked, now all works over MQTT, not need anymore manual editting configuration.yaml (if you update from previous versions - remove in configuration.yaml all about Ritar batteries REST API ), all statistics from previous REST API sensors will be preserved and NOT disapear. Visit to this addon configuration, for setup MQTT. Restart Homeassistant for properly startup. Entities card examples you still can find by link below. </br>
-.</br>
 UPDATE 1.7 - MAJOR UPDATE. Serious main code reworking and optimizations, for FUTURE adding support more than 4 batteries units. PLEASE DO CLEAN ADDON REINSTALL WITH DELETING ADDON DATA for properly work ! Sensors data in this case, will be PRESERVED and NOT loose. Sure - do IP, port, MQTT reconfigure how for clean installation.</br>
+.</br>
+UPDATE 1.7.2 - added support for **up to 14 battery units. READ THIS information about modbus IDs, DIP switches, inverter setup !** - https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/WIRING.md . Modbus IDs 0 and 15 - reserved for technical purposes. </br>
 
 Homeassitant entities cards examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/homeassistant_entities_cards_examples </br>
 
