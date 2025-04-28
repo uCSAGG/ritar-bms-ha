@@ -281,6 +281,16 @@ while True:
             2: {"block_voltage": bat_2_get_block_voltage, "cells_voltage": bat_2_get_cells_voltage, "temperature": bat_2_get_temperature, "extra_temperature": bat_2_get_extra_temperature},
             3: {"block_voltage": bat_3_get_block_voltage, "cells_voltage": bat_3_get_cells_voltage, "temperature": bat_3_get_temperature, "extra_temperature": bat_3_get_extra_temperature},
             4: {"block_voltage": bat_4_get_block_voltage, "cells_voltage": bat_4_get_cells_voltage, "temperature": bat_4_get_temperature, "extra_temperature": bat_4_get_extra_temperature},
+            5: {"block_voltage": bat_5_get_block_voltage, "cells_voltage": bat_5_get_cells_voltage, "temperature": bat_5_get_temperature, "extra_temperature": bat_5_get_extra_temperature},
+            6: {"block_voltage": bat_6_get_block_voltage, "cells_voltage": bat_6_get_cells_voltage, "temperature": bat_6_get_temperature, "extra_temperature": bat_6_get_extra_temperature},
+            7: {"block_voltage": bat_7_get_block_voltage, "cells_voltage": bat_7_get_cells_voltage, "temperature": bat_7_get_temperature, "extra_temperature": bat_7_get_extra_temperature},
+            8: {"block_voltage": bat_8_get_block_voltage, "cells_voltage": bat_8_get_cells_voltage, "temperature": bat_8_get_temperature, "extra_temperature": bat_8_get_extra_temperature},
+            9: {"block_voltage": bat_9_get_block_voltage, "cells_voltage": bat_9_get_cells_voltage, "temperature": bat_9_get_temperature, "extra_temperature": bat_9_get_extra_temperature},
+            10: {"block_voltage": bat_10_get_block_voltage, "cells_voltage": bat_10_get_cells_voltage, "temperature": bat_10_get_temperature, "extra_temperature": bat_10_get_extra_temperature},
+            11: {"block_voltage": bat_11_get_block_voltage, "cells_voltage": bat_11_get_cells_voltage, "temperature": bat_11_get_temperature, "extra_temperature": bat_11_get_extra_temperature},
+            12: {"block_voltage": bat_12_get_block_voltage, "cells_voltage": bat_12_get_cells_voltage, "temperature": bat_12_get_temperature, "extra_temperature": bat_12_get_extra_temperature},
+            13: {"block_voltage": bat_13_get_block_voltage, "cells_voltage": bat_13_get_cells_voltage, "temperature": bat_13_get_temperature, "extra_temperature": bat_13_get_extra_temperature},
+            14: {"block_voltage": bat_14_get_block_voltage, "cells_voltage": bat_14_get_cells_voltage, "temperature": bat_14_get_temperature, "extra_temperature": bat_14_get_extra_temperature},
         }
 
         for i in range(1, num_batteries + 1):
