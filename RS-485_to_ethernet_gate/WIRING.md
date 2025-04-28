@@ -9,3 +9,5 @@ Batteries DIP switches : https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-
 Inverter setup : </br>
 https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/Inverter_DIP_Switches.jpg </br>
 https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/Inverter_MODBUS_ID.jpg </br>
+
+Thats usable for less battery units too, from 1 up to 14 units. Inverter modbus ID must be higher than last battery ID ! </br>
