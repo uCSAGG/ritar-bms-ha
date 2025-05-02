@@ -7,6 +7,9 @@ https://www.gptess.com/lithium-ion_battery_System/66.html
 
 <b>Wiring to RS485 to ethernet gate<b> https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/WIRING.md </br>
 
+** NEW UNDOCUMENTED IN OFFICIAL SOURCES WAY TO CONNECT WITH DEYE INVERTERS OVER CAN BUS**
+https://github.com/mamontuka/ritar-bms-ha/tree/main/UNDOCUMENTED_WIRING_WITH_DEYE/README.md
+
 RS485 to ethernet gate software and documentation : https://github.com/mamontuka/ritar-bms-ha/tree/main/RS-485_to_ethernet_gate </br>
 
 Official monitoring bluetooth android application : https://github.com/mamontuka/ritar-bms-ha/tree/main/android_bluetooth_monitoring_app </br>
@@ -30,8 +33,10 @@ UPDATE 1.4 - added WATTmeter charge/discharge power sensor, configurable RS485 c
 UPDATE 1.5 - added support for up to 4 batteries, more configurable queries delays, example templates updated. </br>
 UPDATE 1.6 - MAJOR UPDATE. API successfuly reworked, now all works over MQTT, not need anymore manual editting configuration.yaml (if you update from previous versions - remove in configuration.yaml all about Ritar batteries REST API ), all statistics from previous REST API sensors will be preserved and NOT disapear. Visit to this addon configuration, for setup MQTT. Restart Homeassistant for properly startup. Entities card examples you still can find by link below. </br>
 UPDATE 1.7 - MAJOR UPDATE. Serious main code reworking and optimizations, for FUTURE adding support more than 4 batteries units. PLEASE DO CLEAN ADDON REINSTALL WITH DELETING ADDON DATA for properly work ! Sensors data in this case, will be PRESERVED and NOT loose. Sure - do IP, port, MQTT reconfigure how for clean installation.</br>
-.</br>
 UPDATE 1.7.2 - added support for **up to 14 battery units. READ THIS information about modbus IDs, DIP switches, inverter setup !** - https://github.com/mamontuka/ritar-bms-ha/blob/main/RS-485_to_ethernet_gate/WIRING.md . Modbus IDs 0 and 15 - reserved for technical purposes. </br>
+.</br>
+UPDATE 1.7.3 - added support for **up to 16 battery units. 15 - DIP switches 1111, 16 (zero number actualy) - DIP switches 0000.** Added important information about alternative wiring with Deye inverters over **CAN bus - NEW UNDOCUMENTED IN OFFICIAL SOURCES WAY TO CONNECT WITH DEYE INVERTERS OVER CAN BUS**
+https://github.com/mamontuka/ritar-bms-ha/tree/main/UNDOCUMENTED_WIRING_WITH_DEYE/README.md </br>
 
 Homeassitant entities cards examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/homeassistant_entities_cards_examples </br>
 
