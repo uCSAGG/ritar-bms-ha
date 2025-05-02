@@ -4,13 +4,13 @@ In official manuals proposed to connect Ritar batteries over RS485 to Deye inver
 but in this case on ESS system with multi battery units we have troubles with modbus IDs, 
 need offset inverter modbus ID after last battery ID on bus. </br>
 
-In alternative undocumenter connection over CAN bus, now we hafe profit with splitting modbus tree on 
+In alternative undocumented connection over CAN bus, now we have profit with splitting modbus tree on 
 two sides - on inverter side own modbus numeration, on batteries side - too. So ESS at now can have 16 battery units, 
-be readable like was over RS485 to ethernet gate from integration, have connection to inverter over another CAN protocol instead RS485, 
-from inverter side - own RS485 modbus numeration - give ability to connect anotherone RS485 to ethernet gate for reading inverter(s), 
+be readable like was over RS485 to ethernet gate from HA integration, have connection to inverter over CAN protocol instead RS485, 
+from inverter side - own RS485 modbus numeration - give ability to connect anotherone "RS485 to ethernet gate" for reading inverter(s), 
 ability to build on this side splitted paralell inverters setup with unique modbus IDs. </br>
 
-Also this alternative connection give more clear and improved working with batteries, better balancing units. **Recomended to use with more than one battery units atm.**</br>
+Also this alternative connection give more clear and improved work with batteries, better balancing units. **Recomended to use with more than one battery units atm.**</br>
 
 Master battery:
 
