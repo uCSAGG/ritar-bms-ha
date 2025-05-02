@@ -291,6 +291,8 @@ while True:
             12: {"block_voltage": bat_12_get_block_voltage, "cells_voltage": bat_12_get_cells_voltage, "temperature": bat_12_get_temperature, "extra_temperature": bat_12_get_extra_temperature},
             13: {"block_voltage": bat_13_get_block_voltage, "cells_voltage": bat_13_get_cells_voltage, "temperature": bat_13_get_temperature, "extra_temperature": bat_13_get_extra_temperature},
             14: {"block_voltage": bat_14_get_block_voltage, "cells_voltage": bat_14_get_cells_voltage, "temperature": bat_14_get_temperature, "extra_temperature": bat_14_get_extra_temperature},
+            15: {"block_voltage": bat_15_get_block_voltage, "cells_voltage": bat_15_get_cells_voltage, "temperature": bat_15_get_temperature, "extra_temperature": bat_15_get_extra_temperature},
+            16: {"block_voltage": bat_16_get_block_voltage, "cells_voltage": bat_16_get_cells_voltage, "temperature": bat_16_get_temperature, "extra_temperature": bat_16_get_extra_temperature},
         }
 
         for i in range(1, num_batteries + 1):
