@@ -124,3 +124,20 @@ bat_14_not_decrypted_2 = b'\x0e\x03\x00\x9b\x00\x02\xb5\x1b'       # Unknown at 
 bat_14_get_extra_temperature = b'\x0e\x03\x00\x91\x00\x0a\x94\xdf' # Extra temperature query for Battery 14
 bat_14_not_decrypted_3 = b'\x0e\x03\x00\xef\x00\x06\xf4\xc2'       # Unknown at now
 
+# Battery 15 Queries (last DIP 1111)
+bat_15_get_block_voltage = b'\x0f\x03\x00\x00\x00\x10\x45\x28'     # Battery voltage query for Battery 15
+bat_15_not_decrypted_1 = b'\x0f\x03\x00\x21\x00\x01\xd5\x2e'       # Unknown at now
+bat_15_get_cells_voltage = b'\x0f\x03\x00\x28\x00\x10\xc5\x20'     # Cells voltage query for Battery 15
+bat_15_get_temperature = b'\x0f\x03\x00\x78\x00\x04\xc5\x3e'       # Temperature query for Battery 15
+bat_15_not_decrypted_2 = b'\x0f\x03\x00\x9b\x00\x02\xb4\xca'       # Unknown at now
+bat_15_get_extra_temperature = b'\x0f\x03\x00\x91\x00\x0a\x95\x0e' # Extra temperature query for Battery 15
+bat_15_not_decrypted_3 = b'\x0f\x03\x00\xef\x00\x06\xf5\x13'       # Unknown at now
+
+# Battery 16 Queries (zero DIP 0000)
+bat_16_get_block_voltage = b'\x00\x03\x00\x00\x00\x10\x45\xd7'     # Battery voltage query for Battery 16
+bat_16_not_decrypted_1 = b'\x00\x03\x00\x21\x00\x01\xd5\xd1'       # Unknown at now
+bat_16_get_cells_voltage = b'\x00\x03\x00\x28\x00\x10\xc5\xdf'     # Cells voltage query for Battery 16
+bat_16_get_temperature = b'\x00\x03\x00\x78\x00\x04\xc5\xc1'       # Temperature query for Battery 16
+bat_16_not_decrypted_2 = b'\x00\x03\x00\x9b\x00\x02\xb4\x35'       # Unknown at now
+bat_16_get_extra_temperature = b'\x00\x03\x00\x91\x00\x0a\x95\xf1' # Extra temperature query for Battery 16
+bat_16_not_decrypted_3 = b'\x00\x03\x00\xef\x00\x06\xf5\xec'       # Unknown at now
