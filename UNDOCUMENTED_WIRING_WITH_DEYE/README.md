@@ -12,6 +12,8 @@ ability to build on this side splitted paralell inverters setup with unique modb
 
 Also this alternative connection give more clear and improved work with batteries, better balancing units. **Recomended to use with more than one battery units atm.**</br>
 
+__better battery units balancing provided with TURNED OFF float charge in inverter settings__ , with turned ON float charge - inverter do disbalance betwen battery units </br>
+
 Master battery:
 
 ![screenshot](https://github.com/mamontuka/ritar-bms-ha/blob/main/UNDOCUMENTED_WIRING_WITH_DEYE/1_MASTER_battery.jpg)
