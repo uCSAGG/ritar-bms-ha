@@ -7,8 +7,8 @@ RUN apk add --no-cache python3
 RUN mkdir /workdir
 WORKDIR /workdir
 
-COPY ritar-bms.py protocol.py run.sh /
-RUN pip3 install pyyaml paho-mqtt
+COPY ritar-bms.py protocol.py modbus_gateway.py run.sh /
+RUN pip3 install pyyaml paho-mqtt pyserial
 RUN chmod a+x /run.sh
 
 CMD [ "sh", "/run.sh" ]
