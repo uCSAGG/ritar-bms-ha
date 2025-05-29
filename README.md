@@ -39,6 +39,7 @@ https://github.com/mamontuka/ritar-bms-ha/tree/main/UNDOCUMENTED_WIRING_WITH_DEY
 .</br>
 UPDATE 1.8 - added support for serial connection, now you can choose what connection type you prefer. Major reworks and optimizations. </br>
 UPDATE 1.8.1 - docker-compose.yaml hotfix, added devices /dev/ttyUSB0 and /dev/ttyUSB1
+UPDATE 1.8.2 - config.yaml hotfix, added uart:true, usb:true
 
 Homeassitant entities cards examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/homeassistant_entities_cards_examples </br>
 
