@@ -38,8 +38,8 @@ UPDATE 1.7.3 - added support for **up to 16 battery units. 15 - DIP switches 111
 https://github.com/mamontuka/ritar-bms-ha/tree/main/UNDOCUMENTED_WIRING_WITH_DEYE/README.md </br>
 .</br>
 UPDATE 1.8 - added support for serial connection, now you can choose what connection type you prefer. Major reworks and optimizations. </br>
-UPDATE 1.8.1 - docker-compose.yaml hotfix, added devices /dev/ttyUSB0 and /dev/ttyUSB1
-UPDATE 1.8.2 - config.yaml hotfix, added uart:true, usb:true
+UPDATE 1.8.1 - docker-compose.yaml hotfix, added devices /dev/ttyUSB0 and /dev/ttyUSB1 </br>
+UPDATE 1.8.2 - config.yaml hotfix, added uart:true, usb:true </br>
 
 Homeassitant entities cards examples : https://github.com/mamontuka/ritar-bms-ha/tree/main/homeassistant_entities_cards_examples </br>
 
