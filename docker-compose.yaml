@@ -8,3 +8,7 @@ services:
     volumes:
       - ./config.yaml:/workdir/config.yaml
       - /dev:/dev
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/ttyUSB1:/dev/ttyUSB1
+  
