@@ -19,10 +19,14 @@ cell_max_limit = 4750
 volt_min_limit = 40.00
 volt_max_limit = 60.00
 temp_min_limit = -20
-temp_max_limit = 60
+temp_max_limit = 55
 
 # Store last valid cycle counts
 last_valid_cycle_count = {}
+
+# Store last valid temperatures
+last_valid_temps = {}
+last_valid_extra = {}
 
 # --- Configuration loader ---
 def load_config():
@@ -48,16 +52,13 @@ def to_float(value, name):
     except ValueError:
         sys.exit(f"Error: {name} must be a number, got {value}")
 
-
 def validate_delay(cfg):
     qd = to_float(cfg.get('queries_delay', '0.1'), 'queries_delay')
     nb = to_float(cfg.get('next_battery_delay', '0.5'), 'next_battery_delay')
     return qd, nb
 
-
 def valid_len(buf, length):
     return buf is not None and len(buf) == length
-
 
 def hex_to_temperature(hex_str):
     pairs = [hex_str[i:i+2] for i in range(0, len(hex_str), 2)]
@@ -69,7 +70,6 @@ def hex_to_temperature(hex_str):
         raw = int(data[i] + data[i+1], 16)
         temps.append(round((raw - 726) * 0.1 + 22.6, 1))
     return temps
-
 
 def process_extra_temperature(data):
     if not valid_len(data, 25):
@@ -83,6 +83,20 @@ def process_extra_temperature(data):
     env_valid = env if temp_min_limit <= env <= temp_max_limit else None
     return mos_valid, env_valid
 
+def filter_temperature_spikes(new_vals, last_vals, delta_limit=10):
+    """Filter temperature list values based on max delta compared to last good values."""
+    filtered = []
+    for i, val in enumerate(new_vals):
+        if val is None or not (temp_min_limit <= val <= temp_max_limit):
+            filtered.append(None)
+        elif i < len(last_vals):
+            if abs(val - last_vals[i]) > delta_limit:
+                filtered.append(last_vals[i])  # reuse last known good value
+            else:
+                filtered.append(val)
+        else:
+            filtered.append(val)
+    return filtered
 
 def process_battery_data(index, block_buf, cells_buf, temp_buf):
     result = {
@@ -119,7 +133,6 @@ def process_battery_data(index, block_buf, cells_buf, temp_buf):
         temps = hex_to_temperature(hx)
         result['temps'] = [t for t in temps if temp_min_limit <= t <= temp_max_limit]
     return result
-
 
 def publish_sensors(client, index, data, mos_temp, env_temp, model):
     base = f"homeassistant/sensor/ritar_{index}"
@@ -164,20 +177,29 @@ def publish_sensors(client, index, data, mos_temp, env_temp, model):
             pub(f'cell_{i}', f'Cell {i}', 'voltage', 'mV', v)
     # Temperatures
     if data['temps']:
-        for i, t in enumerate(data['temps'], start=1):
+        last_temps = last_valid_temps.get(index, [])
+        valid_temps = filter_temperature_spikes(data['temps'], last_temps)
+        last_valid_temps[index] = valid_temps
+        for i, t in enumerate(valid_temps, start=1):
             pub(f'temp_{i}', f'Temp {i}', 'temperature', '°C', t)
     # Extra temperatures
-    if mos_temp is not None:
+    last_mos, last_env = last_valid_extra.get(index, (None, None))
+    def within_delta(new, old, limit=10):
+        return old is None or abs(new - old) <= limit
+    if mos_temp is not None and within_delta(mos_temp, last_mos):
+        last_mos = mos_temp
         pub('temp_mos', 'T MOS', 'temperature', '°C', mos_temp)
-    if env_temp is not None:
+    if env_temp is not None and within_delta(env_temp, last_env):
+        last_env = env_temp
         pub('temp_env', 'T ENV', 'temperature', '°C', env_temp)
+    last_valid_extra[index] = (last_mos, last_env)
 
 # --- Main execution ---
 if __name__ == '__main__':
     config = load_config()
     gateway = ModbusGateway(config)
     battery_model = config.get('battery_model', 'BAT-5KWH-51.2V')
-    read_timeout = config.get('read_timeout', 30)
+    read_timeout = config.get('read_timeout', 15)
     queries_delay, next_battery_delay = validate_delay(config)
 
     # MQTT setup
@@ -205,7 +227,7 @@ if __name__ == '__main__':
     print(f"Read Timeout    : {read_timeout}s")
     print(f"Queries Delay   : {queries_delay}s")
     print(f"Next Bat. Delay : {next_battery_delay}s")
-    print("-" * 119)
+    print("-" * 112)
 
     num_batt = config.get('num_batteries', 1)
     queries = {
@@ -271,7 +293,7 @@ if __name__ == '__main__':
                     print(f"Battery {i} Temps: {', '.join(str(t) for t in data['temps'])}°C")
                 if mos_t is not None and env_t is not None:
                     print(f"Battery {i} MOS Temp: {mos_t}°C, ENV Temp: {env_t}°C")
-                print("-" * 119)
+                print("-" * 112)
                 # Publish
                 publish_sensors(client, i, data, mos_t, env_t, battery_model)
             gateway.close()
