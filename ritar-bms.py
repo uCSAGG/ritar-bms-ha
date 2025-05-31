@@ -174,7 +174,7 @@ def publish_sensors(client, index, data, mos_temp, env_temp, model):
     # Cell voltages
     if data['cells']:
         for i, v in enumerate(data['cells'], start=1):
-            pub(f'cell_{i}', f'Cell {i}', 'voltage', 'mV', v)
+            pub(f'cell_{i:02d}', f'Cell {i:02d}', 'voltage', 'mV', v)
     # Temperatures
     if data['temps']:
         last_temps = last_valid_temps.get(index, [])
